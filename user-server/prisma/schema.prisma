@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+ 
+model account {
+  id           Int     @id @default(autoincrement())
+  email        String  @unique(map: "email_UNIQUE") @db.VarChar(50)
+  accessToken  String? @db.VarChar(700)
+  refreshToken String? @db.VarChar(700)
+  password     String? @db.VarChar(200)
+  veryfied     Int     @default(0) @db.TinyInt
+  role         String  @default("user") @db.VarChar(10)
+  user         user?   
+}
+
+model user {
+  id          Int     @id @default(autoincrement())
+  displayName String  @db.VarChar(50)
+  photoURL    String  @db.VarChar(500)
+  account     account? @relation(fields: [accountId], references: [id])
+  accountId   Int     @unique(map: "idAccount_UNIQUE") 
+}

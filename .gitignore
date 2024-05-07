@@ -1,0 +1,6 @@
+
+*/node_modules/
+user-server/src/jwt/key/
+payment-server/src/jwt/key/
+mysql-data-auth/
+mysql-data-payment/

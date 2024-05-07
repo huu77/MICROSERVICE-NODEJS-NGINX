@@ -1,0 +1,98 @@
+version: '3'
+
+services:
+  nginx:
+    build: 
+      context: ./nginx-server
+      dockerfile: Dockerfile
+    ports:
+      - "8888:80"
+    restart: always
+    volumes:
+      - ./nginx-server/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - user_server
+      - payment_server
+    networks:
+      - server_network
+
+  user_server:
+    build:
+      context: ./user-server
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    restart: always
+    depends_on:
+      - mysql_user
+      - rabbitmq
+    networks:
+      - server_network
+
+  mysql_user:
+    container_name: auth_database_mysql
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: auth_database
+      MYSQL_USER: prisma  
+      MYSQL_PASSWORD: 123456
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./mysql-data-auth:/var/lib/mysql
+    networks:
+      - server_network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+        - 5672:5672
+        - 15672:15672
+    volumes:
+        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    networks:
+      - server_network
+  
+
+  payment_server:
+    build:
+      context: ./payment-server
+      dockerfile: Dockerfile
+    ports:
+      - "3333:3333"
+    restart: always
+    depends_on:
+      - mysql_payment
+      - rabbitmq
+    networks:
+      - server_network
+  
+  mysql_payment:
+    container_name: payment_database_mysql
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: payment_database
+      MYSQL_USER: prisma  
+      MYSQL_PASSWORD: 123456
+    ports:
+      - "3308:3306"
+    volumes:
+      - ./mysql-data-payment:/var/lib/mysql
+    networks:
+      - server_network
+      
+volumes:
+  mysql-data-auth:
+    # driver: local
+  mysql-data-payment:
+    # driver: local
+
+
+networks:
+  server_network:
